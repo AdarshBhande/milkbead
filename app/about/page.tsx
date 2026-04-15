@@ -26,7 +26,7 @@ export default function AboutPage() {
             <p className="font-nunito font-700 text-gray-400 mt-4">milkbead ✿</p>
           </div>
           <div>
-            <h2 className="font-nunito font-900 text-3xl text-softblack mb-4">Hello, I&apos;m Milkbead 🌸</h2>
+            <h2 className="font-nunito font-900 text-3xl text-softblack mb-4">Hello, I&apos;m Milkbead</h2>
             <div className="space-y-4 font-inter text-gray-500 text-sm leading-relaxed">
               <p>
                 Milkbead started as a tiny passion project — stringing beads at my desk while watching anime, gifting handmade bracelets to friends, and realizing that there was magic in creating something with your hands.
