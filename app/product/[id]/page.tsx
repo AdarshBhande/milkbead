@@ -11,17 +11,18 @@ import { useWishlist } from "@/context/WishlistContext";
 import ProductCard from "@/components/shop/ProductCard";
 
 const categoryGradients: Record<string, string> = {
-  Necklaces: "from-pink-100 via-rose-50 to-pink-50",
+  MAYURI: "from-pink-100 via-rose-50 to-pink-50",
   Bracelets: "from-purple-100 via-lavender to-purple-50",
   Earrings: "from-yellow-50 via-amber-50 to-yellow-100",
   Keychains: "from-blue-50 via-cyan-50 to-blue-100",
   Bows: "from-pink-100 via-fuchsia-50 to-rose-50",
+
   Rings: "from-amber-50 via-yellow-50 to-orange-50",
   "Phone Charms": "from-teal-50 via-emerald-50 to-teal-100",
 };
 
 const categoryEmojis: Record<string, string> = {
-  Necklaces: "✨", Bracelets: "💫", Earrings: "🌸",
+  MAYURI: "✨", Bracelets: "💫", Earrings: "🌸",
   Keychains: "🔑", Bows: "🎀", Rings: "💍", "Phone Charms": "📱",
 };
 
@@ -146,9 +147,8 @@ export default function ProductPage() {
               {/* Wishlist button */}
               <button
                 onClick={() => toggleWishlist(product)}
-                className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-soft transition-all duration-200 hover:scale-110 ${
-                  inWishlist ? "bg-milkpink text-softblack" : "bg-white/80 text-gray-400"
-                }`}
+                className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-soft transition-all duration-200 hover:scale-110 ${inWishlist ? "bg-milkpink text-softblack" : "bg-white/80 text-gray-400"
+                  }`}
               >
                 <Heart size={18} fill={inWishlist ? "currentColor" : "none"} />
               </button>
@@ -179,9 +179,8 @@ export default function ProductPage() {
                   <button
                     key={i}
                     onClick={() => setCurrentImage(i)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
-                      i === currentImage ? "border-milkpink shadow-soft" : "border-transparent hover:border-pink-light"
-                    }`}
+                    className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${i === currentImage ? "border-milkpink shadow-soft" : "border-transparent hover:border-pink-light"
+                      }`}
                   >
                     <img
                       src={img}
@@ -275,9 +274,8 @@ export default function ProductPage() {
               <button
                 id="product-add-to-cart-btn"
                 onClick={() => addToCart(product, quantity)}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-nunito font-700 text-base transition-all duration-300 hover:scale-105 ${
-                  inCart ? "bg-pink-dark text-white shadow-soft-glow" : "bg-milkpink text-softblack hover:bg-pink-dark hover:text-white hover:shadow-soft-glow"
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-nunito font-700 text-base transition-all duration-300 hover:scale-105 ${inCart ? "bg-pink-dark text-white shadow-soft-glow" : "bg-milkpink text-softblack hover:bg-pink-dark hover:text-white hover:shadow-soft-glow"
+                  }`}
               >
                 <ShoppingBag size={20} />
                 {inCart ? "Added to Cart ✓" : "Add to Cart"}
@@ -285,9 +283,8 @@ export default function ProductPage() {
               <button
                 id="product-wishlist-btn"
                 onClick={() => toggleWishlist(product)}
-                className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border-2 font-nunito font-700 text-base transition-all duration-300 hover:scale-105 ${
-                  inWishlist ? "border-milkpink bg-milkpink text-softblack" : "border-pink-light hover:border-milkpink hover:bg-pink-light"
-                }`}
+                className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border-2 font-nunito font-700 text-base transition-all duration-300 hover:scale-105 ${inWishlist ? "border-milkpink bg-milkpink text-softblack" : "border-pink-light hover:border-milkpink hover:bg-pink-light"
+                  }`}
               >
                 <Heart size={20} fill={inWishlist ? "currentColor" : "none"} />
               </button>
