@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { getAllOrders, getProducts, addProduct, deleteProduct } from "@/lib/firestore";
 import { Product, Order } from "@/types";
-import { Package, ShoppingBag, Users, IndianRupee, Plus, Settings, BarChart2, Loader2, Database } from "lucide-react";
+import { Package, ShoppingBag, Users, IndianRupee, Plus, Settings, BarChart2, Loader2, Database, Brush } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
@@ -182,7 +182,8 @@ export default function AdminDashboard() {
           {[
             { label: "Add Product", icon: <Plus size={18} />, href: "/admin/products", color: "bg-milkpink" },
             { label: "View Orders", icon: <ShoppingBag size={18} />, href: "/admin/orders", color: "bg-lavender" },
-            { label: "Analytics", icon: <BarChart2 size={18} />, href: "/admin/analytics", color: "bg-beige-dark" },
+            { label: "Custom Designs", icon: <Brush size={18} />, href: "/admin/custom-designs", color: "bg-beige-dark" },
+            { label: "Analytics", icon: <BarChart2 size={18} />, href: "/admin/analytics", color: "bg-purple-100" },
             { label: "Settings", icon: <Settings size={18} />, href: "/admin/settings", color: "bg-pink-light" },
           ].map((action) => (
             <Link

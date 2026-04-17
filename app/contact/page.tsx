@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Send, Mail, MessageSquare, User, CheckCircle } from "lucide-react";
+import { submitContactMessage } from "@/lib/firestore";
 import toast from "react-hot-toast";
 
 export default function ContactPage() {
@@ -13,8 +14,11 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // TODO: Replace with actual Firestore submission
-      await new Promise((r) => setTimeout(r, 1200));
+      await submitContactMessage({
+        name: form.name,
+        email: form.email,
+        message: form.message,
+      });
       setSubmitted(true);
       toast.success("Message sent! We'll reply soon 💖");
     } catch {
