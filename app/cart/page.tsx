@@ -59,10 +59,14 @@ export default function CartPage() {
               <div key={item.product.id} className="card p-4 flex gap-4 group">
                 {/* Product Image */}
                 <Link href={`/product/${item.product.id}`} className="flex-shrink-0">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-beige flex items-center justify-center overflow-hidden">
-                    <span className="text-3xl">
-                      {{ Necklaces: "✨", Bracelets: "💫", Earrings: "🌸", Keychains: "🔑", Bows: "🎀", Rings: "💍", "Phone Charms": "📱" }[item.product.category] || "✨"}
-                    </span>
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-beige flex items-center justify-center overflow-hidden relative">
+                    {item.product.images?.length > 0 ? (
+                      <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-3xl">
+                        {{ Necklaces: "✨", Bracelets: "💫", Earrings: "🌸", Keychains: "🔑", Bows: "🎀", Rings: "💍", "Phone Charms": "📱" }[item.product.category] || "✨"}
+                      </span>
+                    )}
                   </div>
                 </Link>
 
