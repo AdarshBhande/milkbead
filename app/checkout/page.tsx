@@ -417,7 +417,7 @@ export default function CheckoutPage() {
                             {item.product.images?.length > 0 ? (
                               <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
                             ) : (
-                              {{ Necklaces: "✨", Bracelets: "💫", Earrings: "🌸", Keychains: "🔑", Bows: "🎀", Rings: "💍", "Phone Charms": "📱" }[item.product.category] || "✨"}
+                              <span>{{ Necklaces: "✨", Bracelets: "💫", Earrings: "🌸", Keychains: "🔑", Bows: "🎀", Rings: "💍", "Phone Charms": "📱" }[item.product.category] || "✨"}</span>
                             )}
                           </div>
                           <div>
