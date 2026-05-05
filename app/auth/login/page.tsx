@@ -4,19 +4,25 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
+
+type View = "login" | "forgot" | "forgot-success";
 
 function LoginForm() {
   const { signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/";
+
+  const [view, setView] = useState<View>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // ── Login ──────────────────────────────────────────────────────────────────
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -25,7 +31,15 @@ function LoginForm() {
       toast.success("Welcome back! 💖");
       router.push(redirect);
     } catch (err: any) {
-      toast.error(err.message || "Login failed");
+      // Firebase error codes → friendly messages
+      const code = err.code || "";
+      if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") {
+        toast.error("Incorrect email or password 🔐");
+      } else if (code === "auth/too-many-requests") {
+        toast.error("Too many attempts. Try again later.");
+      } else {
+        toast.error(err.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -44,21 +58,128 @@ function LoginForm() {
     }
   };
 
-  return (
+  // ── Forgot Password ────────────────────────────────────────────────────────
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { auth } = await import("@/lib/firebase");
+      const { sendPasswordResetEmail } = await import("firebase/auth");
+      await sendPasswordResetEmail(auth, resetEmail);
+      setView("forgot-success");
+    } catch (err: any) {
+      const code = err.code || "";
+      if (code === "auth/user-not-found") {
+        toast.error("No account found with this email.");
+      } else {
+        toast.error(err.message || "Failed to send reset email");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Shared animated background ─────────────────────────────────────────────
+  const BG = ({ children }: { children: React.ReactNode }) => (
     <div
       className="min-h-screen flex items-center justify-center px-4 py-16 relative overflow-hidden"
       style={{ background: "linear-gradient(135deg, #FDE8F2 0%, #F8C8DC 35%, #EFD9FF 70%, #F5E6D3 100%)", backgroundSize: "400% 400%", animation: "gradientShift 8s ease infinite" }}
     >
-      {/* Blobs */}
       <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-40" style={{ background: "radial-gradient(circle, #E6D6FF, transparent 70%)", animation: "float 8s ease-in-out infinite" }} />
       <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-30" style={{ background: "radial-gradient(circle, #F8C8DC, transparent 70%)", animation: "float 6s ease-in-out infinite", animationDelay: "1s" }} />
-
-      {/* Floating emoji */}
       {["🌸", "✨", "💖", "🎀"].map((e, i) => (
         <div key={i} className="absolute hidden md:block text-3xl pointer-events-none"
           style={{ top: `${10 + i * 22}%`, left: i % 2 === 0 ? "4%" : undefined, right: i % 2 !== 0 ? "4%" : undefined, animation: `float ${3 + i * 0.7}s ease-in-out infinite`, animationDelay: `${i * 0.5}s` }}>{e}</div>
       ))}
+      {children}
+    </div>
+  );
 
+  // ── View: Forgot success ───────────────────────────────────────────────────
+  if (view === "forgot-success") {
+    return (
+      <BG>
+        <div className="w-full max-w-md animate-zoom-in">
+          <div className="card p-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center mx-auto mb-5" style={{ animation: "popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both" }}>
+              <CheckCircle2 size={38} className="text-green-500" />
+            </div>
+            <h1 className="font-nunito font-900 text-2xl text-softblack mb-2 animate-fade-up">Email Sent! 📧</h1>
+            <p className="font-inter text-sm text-gray-400 mb-2 animate-fade-up delay-100">
+              We've sent a password reset link to:
+            </p>
+            <p className="font-nunito font-700 text-softblack mb-6 animate-fade-up delay-200">{resetEmail}</p>
+            <p className="font-inter text-xs text-gray-300 mb-6">Check your inbox (and spam folder) for the reset link. It expires in 1 hour.</p>
+            <button
+              onClick={() => { setView("login"); setResetEmail(""); }}
+              className="flex items-center gap-2 mx-auto font-nunito font-700 text-pink-dark hover:underline text-sm"
+            >
+              <ArrowLeft size={16} /> Back to Sign In
+            </button>
+          </div>
+        </div>
+      </BG>
+    );
+  }
+
+  // ── View: Forgot Password form ─────────────────────────────────────────────
+  if (view === "forgot") {
+    return (
+      <BG>
+        <div className="w-full max-w-md animate-zoom-in">
+          <div className="card p-8">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-full bg-lavender flex items-center justify-center mx-auto mb-4 shadow-lavender animate-ripple">
+                <Mail size={26} className="text-purple-500" />
+              </div>
+              <h1 className="font-nunito font-900 text-2xl text-softblack animate-fade-up">Forgot Password?</h1>
+              <p className="font-inter text-sm text-gray-400 mt-1 animate-fade-up delay-100">
+                No worries! Enter your email and we'll send you a reset link 🌸
+              </p>
+            </div>
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <label className="block font-nunito font-700 text-sm text-softblack mb-1.5">Email Address</label>
+                <input
+                  id="reset-email-input"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="input-field"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <button
+                id="reset-submit-btn"
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 bg-milkpink text-softblack font-nunito font-700 py-4 rounded-2xl hover:bg-pink-dark hover:text-white hover:shadow-soft-glow hover:scale-[1.02] transition-all duration-300 disabled:opacity-60 animate-ripple"
+              >
+                {loading
+                  ? <><Loader2 size={18} className="animate-spin" /> Sending...</>
+                  : <><Mail size={18} /> Send Reset Link</>}
+              </button>
+            </form>
+
+            <button
+              onClick={() => setView("login")}
+              className="flex items-center gap-2 mx-auto mt-6 font-nunito font-700 text-sm text-gray-400 hover:text-pink-dark transition-colors duration-200"
+            >
+              <ArrowLeft size={16} /> Back to Sign In
+            </button>
+          </div>
+        </div>
+      </BG>
+    );
+  }
+
+  // ── View: Login form ───────────────────────────────────────────────────────
+  return (
+    <BG>
       <div className="w-full max-w-md animate-zoom-in">
         <div className="card p-8 hover:shadow-soft-lg transition-shadow duration-300">
           {/* Header */}
@@ -107,7 +228,17 @@ function LoginForm() {
               />
             </div>
             <div>
-              <label className="block font-nunito font-700 text-sm text-softblack mb-1.5">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="font-nunito font-700 text-sm text-softblack">Password</label>
+                {/* ── Forgot Password link ── */}
+                <button
+                  type="button"
+                  onClick={() => { setView("forgot"); setResetEmail(email); }}
+                  className="font-inter text-xs text-pink-dark hover:underline transition-colors duration-200"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <input
                   id="login-password-input"
@@ -146,7 +277,7 @@ function LoginForm() {
           </p>
         </div>
       </div>
-    </div>
+    </BG>
   );
 }
 
