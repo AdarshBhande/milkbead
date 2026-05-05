@@ -9,6 +9,24 @@ import toast from "react-hot-toast";
 
 type View = "login" | "forgot" | "forgot-success";
 
+// ── Stable animated background wrapper (must be OUTSIDE the form component) ──
+function BG({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-16 relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg, #FDE8F2 0%, #F8C8DC 35%, #EFD9FF 70%, #F5E6D3 100%)", backgroundSize: "400% 400%", animation: "gradientShift 8s ease infinite" }}
+    >
+      <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-40" style={{ background: "radial-gradient(circle, #E6D6FF, transparent 70%)", animation: "float 8s ease-in-out infinite" }} />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-30" style={{ background: "radial-gradient(circle, #F8C8DC, transparent 70%)", animation: "float 6s ease-in-out infinite", animationDelay: "1s" }} />
+      {["🌸", "✨", "💖", "🎀"].map((e, i) => (
+        <div key={i} className="absolute hidden md:block text-3xl pointer-events-none"
+          style={{ top: `${10 + i * 22}%`, left: i % 2 === 0 ? "4%" : undefined, right: i % 2 !== 0 ? "4%" : undefined, animation: `float ${3 + i * 0.7}s ease-in-out infinite`, animationDelay: `${i * 0.5}s` }}>{e}</div>
+      ))}
+      {children}
+    </div>
+  );
+}
+
 function LoginForm() {
   const { signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
@@ -78,22 +96,6 @@ function LoginForm() {
       setLoading(false);
     }
   };
-
-  // ── Shared animated background ─────────────────────────────────────────────
-  const BG = ({ children }: { children: React.ReactNode }) => (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-16 relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, #FDE8F2 0%, #F8C8DC 35%, #EFD9FF 70%, #F5E6D3 100%)", backgroundSize: "400% 400%", animation: "gradientShift 8s ease infinite" }}
-    >
-      <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-40" style={{ background: "radial-gradient(circle, #E6D6FF, transparent 70%)", animation: "float 8s ease-in-out infinite" }} />
-      <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-30" style={{ background: "radial-gradient(circle, #F8C8DC, transparent 70%)", animation: "float 6s ease-in-out infinite", animationDelay: "1s" }} />
-      {["🌸", "✨", "💖", "🎀"].map((e, i) => (
-        <div key={i} className="absolute hidden md:block text-3xl pointer-events-none"
-          style={{ top: `${10 + i * 22}%`, left: i % 2 === 0 ? "4%" : undefined, right: i % 2 !== 0 ? "4%" : undefined, animation: `float ${3 + i * 0.7}s ease-in-out infinite`, animationDelay: `${i * 0.5}s` }}>{e}</div>
-      ))}
-      {children}
-    </div>
-  );
 
   // ── View: Forgot success ───────────────────────────────────────────────────
   if (view === "forgot-success") {
