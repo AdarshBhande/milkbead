@@ -5,10 +5,12 @@ import { useParams } from "next/navigation";
 import { ShoppingBag, Heart, Star, ChevronLeft, ChevronRight, Share2, Truck, Shield, RotateCcw, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { getProductById, getProducts } from "@/lib/firestore";
+import { mockProducts } from "@/lib/mockData";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import ProductCard from "@/components/shop/ProductCard";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const categoryGradients: Record<string, string> = {
   MAYURI: "from-pink-100 via-rose-50 to-pink-50",
@@ -27,6 +29,7 @@ const categoryEmojis: Record<string, string> = {
 };
 
 export default function ProductPage() {
+  useScrollReveal();
   const params = useParams();
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -36,19 +39,35 @@ export default function ProductPage() {
   const [related, setRelated] = useState<Product[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
 
-  // Fetch product from Firestore
+  // Fetch product from Firestore, fall back to mockProducts if not found
   useEffect(() => {
     const load = async () => {
       try {
-        const prod = await getProductById(params.id as string);
+        let prod = await getProductById(params.id as string);
+        // Fallback: if Firestore returned null or empty doc, try mockProducts
+        if (!prod || !prod.name || prod.name.trim() === "") {
+          prod = mockProducts.find((p) => p.id === params.id) ?? null;
+        }
         setProduct(prod);
         if (prod) {
-          // Fetch related products (same category)
-          const all = await getProducts();
-          setRelated(all.filter((p) => p.category === prod.category && p.id !== prod.id).slice(0, 4));
+          // Fetch related products (same category), fallback to mock
+          let all: Product[] = [];
+          try {
+            const firestoreAll = await getProducts();
+            const validAll = firestoreAll?.filter((p) => p.name && p.name.trim() !== "") ?? [];
+            all = validAll.length > 0 ? validAll : mockProducts;
+          } catch {
+            all = mockProducts;
+          }
+          setRelated(all.filter((p) => p.category === prod!.category && p.id !== prod!.id).slice(0, 4));
         }
       } catch (err) {
-        console.error("Failed to load product:", err);
+        console.error("Failed to load product, trying mock data:", err);
+        const prod = mockProducts.find((p) => p.id === params.id) ?? null;
+        setProduct(prod);
+        if (prod) {
+          setRelated(mockProducts.filter((p) => p.category === prod.category && p.id !== prod.id).slice(0, 4));
+        }
       } finally {
         setPageLoading(false);
       }
@@ -92,9 +111,9 @@ export default function ProductPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white page-transition">
       {/* Breadcrumb */}
-      <div className="bg-pink-light/30 py-3">
+      <div className="relative overflow-hidden bg-pink-light/20 py-3">
         <div className="section-wrapper">
           <nav className="flex items-center gap-2 text-sm font-inter text-gray-400">
             <Link href="/" className="hover:text-pink-dark transition-colors">Home</Link>
@@ -215,7 +234,8 @@ export default function ProductPage() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} className={i < Math.floor(product.rating) ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"} />
+                    <Star key={i} size={16} className={i < Math.floor(product.rating) ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
+                      style={i < Math.floor(product.rating) ? { animation: `twinkle ${2 + i * 0.2}s ease-in-out infinite`, animationDelay: `${i * 0.15}s` } : {}} />
                   ))}
                 </div>
                 <span className="font-nunito font-semibold text-softblack text-sm">{product.rating}</span>
@@ -286,7 +306,7 @@ export default function ProductPage() {
                 className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border-2 font-nunito font-700 text-base transition-all duration-300 hover:scale-105 ${inWishlist ? "border-milkpink bg-milkpink text-softblack" : "border-pink-light hover:border-milkpink hover:bg-pink-light"
                   }`}
               >
-                <Heart size={20} fill={inWishlist ? "currentColor" : "none"} />
+                <Heart size={20} fill={inWishlist ? "currentColor" : "none"} style={inWishlist ? { animation: "heartbeat 1.2s ease-in-out infinite" } : {}} />
               </button>
               <button className="flex items-center justify-center px-5 py-4 rounded-2xl border-2 border-pink-light hover:border-milkpink hover:bg-pink-light transition-all duration-300">
                 <Share2 size={20} className="text-softblack" />
@@ -325,11 +345,11 @@ export default function ProductPage() {
         </div>
 
         {/* Reviews Section */}
-        <div className="mt-16">
+        <div className="mt-16 reveal">
           <h2 className="font-nunito font-800 text-2xl text-softblack mb-6">Customer Reviews</h2>
           <div className="grid gap-4">
-            {mockReviews.map((review) => (
-              <div key={review.id} className="card p-5 flex gap-4">
+            {mockReviews.map((review, ri) => (
+              <div key={review.id} className="card p-5 flex gap-4 hover:-translate-y-1 hover:shadow-soft-lg transition-all duration-300" style={{ animation: "fadeUp 0.5s ease-out both", animationDelay: `${ri * 0.1}s` }}>
                 <div className="w-10 h-10 rounded-full bg-milkpink flex items-center justify-center font-nunito font-bold text-softblack flex-shrink-0">
                   {review.avatar}
                 </div>
@@ -352,7 +372,7 @@ export default function ProductPage() {
 
         {/* Related Products */}
         {related.length > 0 && (
-          <div className="mt-16">
+          <div className="mt-16 reveal">
             <h2 className="font-nunito font-800 text-2xl text-softblack mb-6">You Might Also Like</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
               {related.map((p) => (

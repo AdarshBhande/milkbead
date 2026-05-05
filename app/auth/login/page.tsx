@@ -45,16 +45,29 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-hero-gradient flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md">
-        <div className="card p-8">
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-16 relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg, #FDE8F2 0%, #F8C8DC 35%, #EFD9FF 70%, #F5E6D3 100%)", backgroundSize: "400% 400%", animation: "gradientShift 8s ease infinite" }}
+    >
+      {/* Blobs */}
+      <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-40" style={{ background: "radial-gradient(circle, #E6D6FF, transparent 70%)", animation: "float 8s ease-in-out infinite" }} />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-30" style={{ background: "radial-gradient(circle, #F8C8DC, transparent 70%)", animation: "float 6s ease-in-out infinite", animationDelay: "1s" }} />
+
+      {/* Floating emoji */}
+      {["🌸", "✨", "💖", "🎀"].map((e, i) => (
+        <div key={i} className="absolute hidden md:block text-3xl pointer-events-none"
+          style={{ top: `${10 + i * 22}%`, left: i % 2 === 0 ? "4%" : undefined, right: i % 2 !== 0 ? "4%" : undefined, animation: `float ${3 + i * 0.7}s ease-in-out infinite`, animationDelay: `${i * 0.5}s` }}>{e}</div>
+      ))}
+
+      <div className="w-full max-w-md animate-zoom-in">
+        <div className="card p-8 hover:shadow-soft-lg transition-shadow duration-300">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-full bg-milkpink flex items-center justify-center mx-auto mb-4 shadow-soft-glow">
-              <span className="text-3xl">🌸</span>
+            <div className="w-16 h-16 rounded-full bg-milkpink flex items-center justify-center mx-auto mb-4 shadow-soft-glow animate-ripple">
+              <span className="text-3xl" style={{ animation: "bounceSoft 2s ease-in-out infinite" }}>🌸</span>
             </div>
-            <h1 className="font-nunito font-900 text-2xl text-softblack">Welcome back!</h1>
-            <p className="font-inter text-sm text-gray-400 mt-1">Sign in to your Milkbead account</p>
+            <h1 className="font-nunito font-900 text-2xl text-softblack animate-fade-up">Welcome back!</h1>
+            <p className="font-inter text-sm text-gray-400 mt-1 animate-fade-up delay-100">Sign in to your Milkbead account</p>
           </div>
 
           {/* Google */}
@@ -119,7 +132,7 @@ function LoginForm() {
               id="login-submit-btn"
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-milkpink text-softblack font-nunito font-700 py-4 rounded-2xl hover:bg-pink-dark hover:text-white hover:shadow-soft-glow transition-all duration-300 disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 bg-milkpink text-softblack font-nunito font-700 py-4 rounded-2xl hover:bg-pink-dark hover:text-white hover:shadow-soft-glow hover:scale-[1.02] transition-all duration-300 disabled:opacity-60 animate-ripple"
             >
               {loading ? <><Loader2 size={18} className="animate-spin" /> Signing in...</> : <>Sign In <ArrowRight size={18} /></>}
             </button>

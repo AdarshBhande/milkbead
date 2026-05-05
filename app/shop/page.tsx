@@ -2,9 +2,11 @@
 
 import { Suspense, useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { SlidersHorizontal, ChevronDown, X, Search, Loader2 } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, X, Search, Loader2, Sparkles } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 import ProductCard from "@/components/shop/ProductCard";
 import { getProducts } from "@/lib/firestore";
+import { mockProducts } from "@/lib/mockData";
 import { Product, Category, CATEGORIES } from "@/types";
 
 const PRICE_RANGES = [
@@ -22,6 +24,7 @@ const SORT_OPTIONS = [
 ];
 
 function ShopContent() {
+  useScrollReveal();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") as Category | null;
   const initialBadge = searchParams.get("badge");
@@ -36,14 +39,22 @@ function ShopContent() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // ✅ Fetch real products from Firestore
+  // ✅ Fetch real products from Firestore, fall back to mock data if empty/error
   useEffect(() => {
     const load = async () => {
       try {
         const prods = await getProducts();
-        setAllProducts(prods);
+        // Check if Firestore products have actual content (name field populated)
+        const validProds = prods?.filter((p) => p.name && p.name.trim() !== "") ?? [];
+        if (validProds.length > 0) {
+          setAllProducts(validProds);
+        } else {
+          // Firestore is empty, has skeleton docs, or not yet populated — show mock catalogue
+          setAllProducts(mockProducts);
+        }
       } catch (err) {
-        console.error("Failed to load products:", err);
+        console.error("Failed to load products from Firestore, using mock data:", err);
+        setAllProducts(mockProducts);
       } finally {
         setProductsLoading(false);
       }
@@ -114,17 +125,26 @@ function ShopContent() {
     (selectedCategory ? 1 : 0) + (selectedPriceRange ? 1 : 0) + (searchQuery ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white page-transition">
       {/* Page Header */}
-      <div className="py-10" style={{ background: "linear-gradient(90deg, #FDE8F2 0%, #F5E6D3 50%, rgba(230,214,255,0.3) 100%)" }}>
-        <div className="section-wrapper">
-          <p style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: "#F8C8DC", fontSize: "0.875rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+      <div className="relative overflow-hidden py-12" style={{ background: "linear-gradient(135deg, #FDE8F2 0%, #F8C8DC 35%, #EFD9FF 70%, #F5E6D3 100%)", backgroundSize: "400% 400%", animation: "gradientShift 8s ease infinite" }}>
+        {/* Blobs */}
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-40" style={{ background: "radial-gradient(circle, #E6D6FF, transparent 70%)", animation: "float 6s ease-in-out infinite" }} />
+        <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-30" style={{ background: "radial-gradient(circle, #F8C8DC, transparent 70%)", animation: "float 8s ease-in-out infinite", animationDelay: "1s" }} />
+        {/* Floating icons */}
+        {["🛍️", "✨", "🌸"].map((e, i) => (
+          <div key={i} className="absolute hidden md:block text-2xl pointer-events-none"
+            style={{ top: `${15 + i * 25}%`, right: `${4 + i * 4}%`, animation: `float ${3 + i * 0.8}s ease-in-out infinite`, animationDelay: `${i * 0.4}s` }}>{e}</div>
+        ))}
+        <div className="section-wrapper relative z-10">
+          <p style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: "#F8C8DC", fontSize: "0.875rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "6px" }}>
+            <Sparkles size={14} style={{ animation: "twinkle 1.5s ease-in-out infinite" }} />
             🛍️ All Products
           </p>
-          <h1 style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: "2.25rem", color: "#333333", marginBottom: "0.5rem" }}>
+          <h1 className="animate-fade-up" style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: "2.25rem", color: "#333333", marginBottom: "0.5rem" }}>
             {selectedCategory || "Shop Everything"}
           </h1>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: "0.875rem", color: "#9ca3af" }}>
+          <p className="animate-fade-up delay-100" style={{ fontFamily: "Inter, sans-serif", fontSize: "0.875rem", color: "#9ca3af" }}>
             {productsLoading ? "Loading..." : `${filteredProducts.length} items found`}
           </p>
         </div>
@@ -237,8 +257,10 @@ function ShopContent() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredProducts.map((product, i) => (
+                  <div key={product.id} className="reveal" style={{ transitionDelay: `${Math.min(i * 0.06, 0.5)}s` }}>
+                    <ProductCard product={product} />
+                  </div>
                 ))}
               </div>
             )}

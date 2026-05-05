@@ -112,7 +112,6 @@ export default function CheckoutPage() {
       state: address.state,
       pincode: address.pincode,
     };
-    // Only include line2 if it has a value
     if (address.line2 && address.line2.trim()) {
       addressData.line2 = address.line2.trim();
     }
@@ -127,13 +126,33 @@ export default function CheckoutPage() {
       paymentMethod,
       createdAt: new Date().toISOString(),
     };
-    // Only include paymentId if present
     if (paymentId) {
       orderData.paymentId = paymentId;
     }
 
     const orderId = await createOrder(orderData);
     return orderId;
+  };
+
+  // 📧 Send order confirmation emails (non-blocking — won’t break checkout if it fails)
+  const sendOrderEmail = (orderId: string, paymentId?: string) => {
+    const payload = {
+      orderId,
+      customerEmail: address.email,
+      customerName: address.name,
+      items: cartItems,
+      total,
+      shipping,
+      address,
+      paymentMethod,
+      paymentId: paymentId ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    fetch("/api/send-order-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch((err) => console.warn("Email send failed (non-critical):", err));
   };
 
   const handlePlaceOrder = async () => {
@@ -174,6 +193,8 @@ export default function CheckoutPage() {
             try {
               // ✅ Save order to Firestore after payment success
               const orderId = await saveOrder(response.razorpay_payment_id);
+              // 📧 Send confirmation emails (fire-and-forget)
+              sendOrderEmail(orderId, response.razorpay_payment_id);
               clearCart();
               router.push(`/order-confirmation?order_id=${orderId}&payment_id=${response.razorpay_payment_id}&method=razorpay`);
             } catch (err) {
@@ -195,6 +216,8 @@ export default function CheckoutPage() {
       } else {
         // COD — save to Firestore immediately
         const orderId = await saveOrder();
+        // 📧 Send confirmation emails (fire-and-forget)
+        sendOrderEmail(orderId);
         clearCart();
         router.push(`/order-confirmation?order_id=${orderId}&method=cod`);
       }
@@ -224,11 +247,19 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white page-transition">
       {/* Header */}
-      <div className="bg-gradient-to-r from-pink-light via-beige to-lavender/30 py-10">
-        <div className="section-wrapper">
-          <h1 className="font-nunito font-900 text-3xl md:text-4xl text-softblack mb-4">Checkout</h1>
+      <div className="relative overflow-hidden py-12" style={{ background: "linear-gradient(135deg, #FDE8F2 0%, #F8C8DC 35%, #EFD9FF 70%, #F5E6D3 100%)", backgroundSize: "400% 400%", animation: "gradientShift 8s ease infinite" }}>
+        {/* Blobs */}
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-40" style={{ background: "radial-gradient(circle, #E6D6FF, transparent 70%)", animation: "float 6s ease-in-out infinite" }} />
+        <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-30" style={{ background: "radial-gradient(circle, #F8C8DC, transparent 70%)", animation: "float 8s ease-in-out infinite", animationDelay: "1s" }} />
+        {/* Floating icons */}
+        {["🛒", "✨"].map((e, i) => (
+          <div key={i} className="absolute hidden md:block text-2xl pointer-events-none"
+            style={{ top: `${20 + i * 40}%`, right: `${5 + i * 5}%`, animation: `float ${3 + i}s ease-in-out infinite`, animationDelay: `${i * 0.5}s` }}>{e}</div>
+        ))}
+        <div className="section-wrapper relative z-10">
+          <h1 className="font-nunito font-900 text-3xl md:text-4xl text-softblack mb-4 animate-fade-up">Checkout</h1>
           {/* Progress Steps */}
           <div className="flex items-center gap-3">
             {steps.map((s, i) => (
